@@ -58,7 +58,7 @@ def create_page_chunks(pages_and_texts, min_token_length=30):
             joined = re.sub(r'\.([A-Z])', r'. \1', joined)
 
             chunk_dict = {
-                "page_number": item["page_number"],
+                "page_number": item["page_number"] + 1,
                 "sentence_chunk": joined,
                 "chunk_char_count": len(joined),
                 "chunk_word_count": len(joined.split(" ")),
