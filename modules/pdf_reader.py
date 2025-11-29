@@ -10,20 +10,6 @@ nlp = English()
 nlp.add_pipe("sentencizer")
 
 
-def download_pdf(url, save_path):
-    if not os.path.exists(save_path):
-        print("File doesn't exist, downloading...")
-        response = requests.get(url)
-        if response.status_code == 200:
-            with open(save_path, "wb") as f:
-                f.write(response.content)
-            print(f"The file has been downloaded and saved as {save_path}")
-        else:
-            print(f"Failed to download the file. Status code: {response.status_code}")
-    else:
-        print(f"File {save_path} exists.")
-
-
 def text_formatter(text: str) -> str:
     return text.replace("\n", " ").strip()
 
@@ -34,7 +20,7 @@ def open_and_read_pdf(pdf_path: str):
     for page_number, page in tqdm(enumerate(doc)):
         text = text_formatter(page.get_text())
         pages_and_texts.append({
-            "page_number": page_number - 41,
+            "page_number": page_number,
             "page_char_count": len(text),
             "page_word_count": len(text.split(" ")),
             "page_sentence_count_raw": len(text.split(". ")),

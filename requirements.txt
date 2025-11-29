@@ -10,3 +10,5 @@ sentence-transformers
 accelerate
 uvicorn
 fastapi
+python-multipart
+faiss-gpu
