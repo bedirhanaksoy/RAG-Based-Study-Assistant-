@@ -26,7 +26,7 @@ def ask(query, tokenizer, llm_model, embedding_model,
         max_new_tokens=max_new_tokens
     )
 
-    output_text = output_text.replace(prompt, "").replace("<bos>", "").replace("<eos>", "")
+    output_text = output_text.replace(prompt, "").replace("<bos>", "").replace("<eos>", "").replace("<end_of_turn>", "")
     output_text = output_text.replace("Sure, here is the answer to the user query:\n\n", "")
 
     if return_answer_only:

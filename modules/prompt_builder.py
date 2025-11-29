@@ -17,8 +17,7 @@ Query: What is the importance of hydration for physical performance?
 Answer: Hydration is crucial for physical performance because water plays key roles in maintaining blood volume, regulating body temperature, and ensuring the transport of nutrients and oxygen to cells. Adequate hydration is essential for optimal muscle function, endurance, and recovery. Dehydration can lead to decreased performance, fatigue, and increased risk of heat-related illnesses, such as heat stroke. Drinking sufficient water before, during, and after exercise helps ensure peak physical performance and recovery.
 \nNow use the following context items to answer the user query:
 {context}
-\nRelevant passages: <extract relevant passages from the context here>
-User query: {query}
+\nUser query: {query}
 Answer:"""
 
     filled = base_prompt.format(context=context, query=query)
