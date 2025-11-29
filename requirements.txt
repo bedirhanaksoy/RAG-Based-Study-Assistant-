@@ -1,0 +1,11 @@
+pandas
+requests
+spacy
+tqdm
+PyMuPDF
+transformers
+torch
+numpy
+sentence-transformers
+accelerate
+uvicorn

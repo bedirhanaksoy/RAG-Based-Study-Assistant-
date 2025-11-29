@@ -1,0 +1,27 @@
+# --- Virtual environment ---
+venv/
+.env/
+.venv/
+
+# --- Project data folders ---
+data/embeddings/
+data/pdf/
+
+# --- Python cache ---
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# --- Jupyter and logs ---
+.ipynb_checkpoints/
+*.log
+
+# --- OS / Editor junk ---
+.DS_Store
+Thumbs.db
+
+# --- Model / HuggingFace caches (optional but recommended) ---
+cache/
+hf_cache/
+huggingface/
