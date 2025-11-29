@@ -3,7 +3,6 @@ from transformers import AutoTokenizer, AutoModelForCausalLM
 
 
 def load_llm():
-    """Identical to your original settings."""
     attn_implementation = "sdpa"
     model_id = "google/gemma-3-1b-it"
 

@@ -11,7 +11,6 @@ nlp.add_pipe("sentencizer")
 
 
 def download_pdf(url, save_path):
-    """Exactly same logic as original."""
     if not os.path.exists(save_path):
         print("File doesn't exist, downloading...")
         response = requests.get(url)
@@ -30,7 +29,6 @@ def text_formatter(text: str) -> str:
 
 
 def open_and_read_pdf(pdf_path: str):
-    """Exact copy of original."""
     doc = fitz.open(pdf_path)
     pages_and_texts = []
     for page_number, page in tqdm(enumerate(doc)):
@@ -47,7 +45,6 @@ def open_and_read_pdf(pdf_path: str):
 
 
 def split_sentences(pages_and_texts):
-    """Exact same logic as original."""
     for item in tqdm(pages_and_texts):
         item["sentences"] = [str(s) for s in nlp(item["text"]).sents]
         item["page_sentence_count_spacy"] = len(item["sentences"])
@@ -60,7 +57,6 @@ def split_list(input_list: list, slice_size: int):
 
 
 def create_sentence_chunks(pages_and_texts, chunk_size=10):
-    """Exact output-compatible logic."""
     for item in tqdm(pages_and_texts):
         item["sentence_chunks"] = split_list(item["sentences"], chunk_size)
         item["num_chunks"] = len(item["sentence_chunks"])
@@ -68,7 +64,6 @@ def create_sentence_chunks(pages_and_texts, chunk_size=10):
 
 
 def create_page_chunks(pages_and_texts, min_token_length=30):
-    """Exact chunk joining logic."""
     pages_and_chunks = []
 
     for item in tqdm(pages_and_texts):

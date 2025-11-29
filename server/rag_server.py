@@ -6,11 +6,6 @@ from modules.embedder import load_embeddings, load_embedding_model
 from modules.llm_inference import load_llm
 from modules.rag_pipeline import ask
 
-
-# ============================================================
-# Load EVERYTHING exactly like the original main.py
-# ============================================================
-
 EMB_PATH = "data/embeddings/chunks.csv"
 
 
@@ -42,7 +37,6 @@ class QueryRequest(BaseModel):
 @app.post("/ask")
 @app.post("/ask")
 def ask_rag(request: QueryRequest):
-    # EXACT same pipeline call
     output = ask(
         query=request.query,
         tokenizer=tokenizer,

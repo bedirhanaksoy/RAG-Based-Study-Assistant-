@@ -9,3 +9,4 @@ numpy
 sentence-transformers
 accelerate
 uvicorn
+fastapi
