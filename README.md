@@ -3,6 +3,7 @@ RAG-Based Intelligent Study Assistant for Document-Oriented Question Answering a
 
 
 ## Installation
+* Install requirements
   ```bash
   python3 -m venv venv
   source venv/bin/activate
