@@ -111,6 +111,35 @@ def _append_to_chat_history(pdf_name: str, query: str, answer: str, context: Lis
     _save_chat_history(pdf_name, history)
 
 
+def _append_flashcard_to_chat_history(pdf_name: str, topic: str, flashcards: List[dict]):
+    """Append a flashcard request and response to the chat history."""
+    history = _load_chat_history(pdf_name)
+    # User entry for flashcard request
+    history.append({"role": "user", "content": f"Generate flashcards about: {topic}"})
+    # Flashcard entry with each flashcard containing question, answer, and context
+    flashcard_content = []
+    for fc in flashcards:
+        flashcard_item = {
+            "question": fc.get("question", ""),
+            "answer": fc.get("answer", ""),
+            "context": [
+                {
+                    "page_number": ctx_item.get("page_number"),
+                    "sentence_chunk": ctx_item.get("sentence_chunk")
+                }
+                for ctx_item in fc.get("context", [])
+            ]
+        }
+        flashcard_content.append(flashcard_item)
+    
+    flashcard_entry = {
+        "role": "flashcard",
+        "content": flashcard_content
+    }
+    history.append(flashcard_entry)
+    _save_chat_history(pdf_name, history)
+
+
 def _ensure_embeddings_for_pdf(pdf_name: str):
     """Return (pages_and_chunks, embeddings_tensor).
 
@@ -283,6 +312,13 @@ def generate_flashcards_endpoint(request: FlashcardRequest):
         tokenizer=tokenizer,
         llm_model=llm_model,
         ask_function=ask
+    )
+    
+    # Save flashcard request and response to chat history
+    _append_flashcard_to_chat_history(
+        pdf_name=request.file_name,
+        topic=request.topic,
+        flashcards=result.get("flashcards", [])
     )
     
     return result
