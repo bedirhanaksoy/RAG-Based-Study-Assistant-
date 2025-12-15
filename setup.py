@@ -17,7 +17,7 @@ from modules.rag_pipeline import ask
 
 
 PDF_PATH = "data/pdf/human.pdf"
-EMB_PATH = "data/embeddings/chunks.csv"
+EMB_PATH = "data/embeddings/chunks_meta.csv"
 PDF_URL = "https://pressbooks.oer.hawaii.edu/humannutrition2/open/download?type=pdf"
 
 

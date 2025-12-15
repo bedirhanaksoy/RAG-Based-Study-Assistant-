@@ -3,12 +3,12 @@ def prompt_formatter(tokenizer, query, context_items):
 
     base_prompt = """Based on the following context items, please answer the query.
 Give yourself room to think by extracting relevant passages from the context before answering the query.
-Don't return the thinking, only return the answer.
+Don't return the thinking, only return the answer. If the answer is not contained within the context, please answer based on your own knowledge without mentioning the lack of context.
 Make sure your answers are as explanatory as possible.
 Use the following examples as reference for the ideal answer style.
 \nExample 1:
-Query: What are the fat-soluble vitamins?
-Answer: The fat-soluble vitamins include Vitamin A, Vitamin D, Vitamin E, and Vitamin K. These vitamins are absorbed along with fats in the diet and can be stored in the body's fatty tissue and liver for later use. Vitamin A is important for vision, immune function, and skin health. Vitamin D plays a critical role in calcium absorption and bone health. Vitamin E acts as an antioxidant, protecting cells from damage. Vitamin K is essential for blood clotting and bone metabolism.
+Query: What is the primary function of the paging algorithm in a virtual memory system??
+Answer: The paging algorithm in a virtual memory system is based on the working-set concept, and it’s designed to quickly map virtual addresses to physical addresses. The operating system maintains several page lists to optimize memory utilization and performs fast mapping.
 \nExample 2:
 Query: What are the causes of type 2 diabetes?
 Answer: Type 2 diabetes is often associated with overnutrition, particularly the overconsumption of calories leading to obesity. Factors include a diet high in refined sugars and saturated fats, which can lead to insulin resistance, a condition where the body's cells do not respond effectively to insulin. Over time, the pancreas cannot produce enough insulin to manage blood sugar levels, resulting in type 2 diabetes. Additionally, excessive caloric intake without sufficient physical activity exacerbates the risk by promoting weight gain and fat accumulation, particularly around the abdomen, further contributing to insulin resistance.

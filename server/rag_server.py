@@ -18,6 +18,7 @@ from modules.pdf_reader import (
     create_sentence_chunks,
     create_page_chunks,
 )
+from modules.flashcard_generator import generate_flashcards
 
 PDF_DIR = "data/pdf"
 EMB_DIR = "data/embeddings"
@@ -43,6 +44,12 @@ class QueryRequest(BaseModel):
     temperature: float = 0.7
     max_new_tokens: int = 512
     return_context: bool = False
+
+
+class FlashcardRequest(BaseModel):
+    topic: str
+    file_name: str
+    question_count: int = 3  # default 3, max 5
 
 
 def _pdf_path_for_name(pdf_name: str) -> str:
@@ -158,3 +165,39 @@ def upload_pdf(file: UploadFile = File(...)):
 @app.get("/")
 def root():
     return {"message": "Local RAG Server is running."}
+
+
+@app.post("/flashcards")
+def generate_flashcards_endpoint(request: FlashcardRequest):
+    """Generate flashcard questions and answers from a PDF document.
+    
+    Args:
+        topic: Topic to generate flashcards about
+        file_name: PDF file to use for RAG context
+        question_count: Number of questions (1-5, default 3)
+    
+    Returns:
+        JSON with topic, file_name, question_count, and flashcards list
+        Each flashcard contains: question, answer, and context items
+    """
+    # Validate question count
+    if request.question_count < 1 or request.question_count > 5:
+        raise HTTPException(status_code=400, detail="question_count must be between 1 and 5")
+    
+    # Ensure embeddings exist (load or create)
+    pages_and_chunks, embeddings_tensor = _ensure_embeddings_for_pdf(request.file_name)
+    
+    # Generate flashcards
+    result = generate_flashcards(
+        topic=request.topic,
+        file_name=request.file_name,
+        question_count=request.question_count,
+        embedding_model=embedding_model,
+        embeddings_tensor=embeddings_tensor,
+        pages_and_chunks=pages_and_chunks,
+        tokenizer=tokenizer,
+        llm_model=llm_model,
+        ask_function=ask
+    )
+    
+    return result
