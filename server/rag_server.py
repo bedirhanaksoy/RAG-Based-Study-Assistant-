@@ -1,8 +1,10 @@
 from fastapi import FastAPI, UploadFile, File, HTTPException
 from pydantic import BaseModel
-from typing import Optional
+from typing import Optional, List
 import pandas as pd
 import os
+import json
+from fastapi.middleware.cors import CORSMiddleware
 
 from modules.embedder import (
     load_embeddings,
@@ -22,6 +24,7 @@ from modules.flashcard_generator import generate_flashcards
 
 PDF_DIR = "data/pdf"
 EMB_DIR = "data/embeddings"
+HISTORY_DIR = "data/chat_history"
 
 print("[SERVER] Loading embedding model (SentenceTransformer)...")
 embedding_model = load_embedding_model()
@@ -36,6 +39,15 @@ print("[SERVER] Server components loaded (models). Embeddings will be loaded per
 # ============================================================
 
 app = FastAPI(title="Local RAG Server", version="1.0")
+
+# Add CORS middleware
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:3000"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 
 class QueryRequest(BaseModel):
@@ -63,6 +75,40 @@ def _emb_path_for_pdf(pdf_name: str) -> str:
     # embeddings saved as <pdf_basename>.index and <pdf_basename>_meta.json
     base = os.path.splitext(os.path.basename(pdf_name))[0]
     return os.path.join(EMB_DIR, base)
+
+
+def _history_path_for_pdf(pdf_name: str) -> str:
+    """Get the chat history file path for a given PDF."""
+    base = os.path.splitext(os.path.basename(pdf_name))[0]
+    return os.path.join(HISTORY_DIR, f"{base}_history.json")
+
+
+def _load_chat_history(pdf_name: str) -> List[dict]:
+    """Load chat history for a PDF. Returns empty list if no history exists."""
+    history_path = _history_path_for_pdf(pdf_name)
+    if os.path.exists(history_path):
+        with open(history_path, "r", encoding="utf-8") as f:
+            return json.load(f)
+    return []
+
+
+def _save_chat_history(pdf_name: str, history: List[dict]):
+    """Save chat history for a PDF."""
+    os.makedirs(HISTORY_DIR, exist_ok=True)
+    history_path = _history_path_for_pdf(pdf_name)
+    with open(history_path, "w", encoding="utf-8") as f:
+        json.dump(history, f, indent=2, ensure_ascii=False)
+
+
+def _append_to_chat_history(pdf_name: str, query: str, answer: str, context: List[dict] = None):
+    """Append a new query-answer pair to the chat history."""
+    history = _load_chat_history(pdf_name)
+    history.append({"role": "user", "content": query})
+    assistant_entry = {"role": "assistant", "content": answer}
+    if context:
+        assistant_entry["context"] = context
+    history.append(assistant_entry)
+    _save_chat_history(pdf_name, history)
 
 
 def _ensure_embeddings_for_pdf(pdf_name: str):
@@ -117,7 +163,8 @@ def ask_rag(request: QueryRequest):
     # Ensure embeddings exist (load or create)
     pages_and_chunks, embeddings_tensor = _ensure_embeddings_for_pdf(pdf_name)
 
-    output = ask(
+    # Always get context for history storage
+    answer, context_items = ask(
         query=request.query,
         tokenizer=tokenizer,
         llm_model=llm_model,
@@ -126,18 +173,20 @@ def ask_rag(request: QueryRequest):
         pages_and_chunks=pages_and_chunks,
         temperature=request.temperature,
         max_new_tokens=request.max_new_tokens,
-        return_answer_only=not request.return_context
+        return_answer_only=False
     )
 
-    if request.return_context is False:
-        return {"answer": output}
-
-    answer, context_items = output
-
+    # Clean context for storage and response
     cleaned_context = [
         {"page_number": item["page_number"], "sentence_chunk": item["sentence_chunk"]}
         for item in context_items
     ]
+
+    # Save to chat history with context
+    _append_to_chat_history(pdf_name, request.query, answer, cleaned_context)
+
+    if request.return_context is False:
+        return {"answer": answer}
 
     return {"answer": answer, "context": cleaned_context}
 
@@ -160,6 +209,42 @@ def upload_pdf(file: UploadFile = File(...)):
         f.write(content)
 
     return {"message": "uploaded", "filename": filename}
+
+
+@app.get("/books")
+def list_books():
+    """List all uploaded PDF books.
+    
+    Returns:
+        JSON with list of book names (without .pdf extension)
+    """
+    if not os.path.exists(PDF_DIR):
+        return {"books": []}
+    
+    books = []
+    for filename in os.listdir(PDF_DIR):
+        if filename.lower().endswith(".pdf"):
+            # Remove .pdf extension for cleaner display
+            book_name = os.path.splitext(filename)[0]
+            books.append(book_name)
+    
+    return {"books": sorted(books)}
+
+
+@app.get("/chat/{book_name}")
+def get_chat_history(book_name: str):
+    """Get chat history for a specific book.
+    
+    Args:
+        book_name: Name of the book (with or without .pdf extension)
+    
+    Returns:
+        JSON with book_name and chat history messages
+    """
+    # Load chat history for this book
+    history = _load_chat_history(book_name)
+    
+    return {"book_name": book_name, "history": history}
 
 
 @app.get("/")
