@@ -260,6 +260,49 @@ def list_books():
     return {"books": sorted(books)}
 
 
+@app.delete("/books/{book_name}")
+def delete_book(book_name: str):
+    """Delete a book and its associated data (PDF, embeddings, chat history).
+    
+    Args:
+        book_name: Name of the book (with or without .pdf extension)
+    
+    Returns:
+        JSON with deletion status
+    """
+    # Get file paths
+    pdf_path = _pdf_path_for_name(book_name)
+    emb_base = _emb_path_for_pdf(book_name)
+    history_path = _history_path_for_pdf(book_name)
+    
+    # Check if PDF exists
+    if not os.path.exists(pdf_path):
+        raise HTTPException(status_code=404, detail=f"Book not found: {book_name}")
+    
+    deleted_files = []
+    
+    # Delete PDF
+    os.remove(pdf_path)
+    deleted_files.append("pdf")
+    
+    # Delete embeddings if they exist
+    emb_index_path = f"{emb_base}.index"
+    emb_meta_path = f"{emb_base}_meta.json"
+    if os.path.exists(emb_index_path):
+        os.remove(emb_index_path)
+        deleted_files.append("embeddings_index")
+    if os.path.exists(emb_meta_path):
+        os.remove(emb_meta_path)
+        deleted_files.append("embeddings_meta")
+    
+    # Delete chat history if it exists
+    if os.path.exists(history_path):
+        os.remove(history_path)
+        deleted_files.append("chat_history")
+    
+    return {"message": "deleted", "book_name": book_name, "deleted_files": deleted_files}
+
+
 @app.get("/chat/{book_name}")
 def get_chat_history(book_name: str):
     """Get chat history for a specific book.
